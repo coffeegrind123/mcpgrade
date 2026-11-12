@@ -42,6 +42,13 @@ export function buildReport(snapshot: ServerSnapshot, findings: Finding[]): Repo
       source: snapshot.source,
       serverName: snapshot.serverName,
       toolCount: snapshot.tools.length,
+      ...(snapshot.instructions !== undefined
+        ? { instructionsChars: snapshot.instructions === null ? null : snapshot.instructions.length }
+        : {}),
+      ...(snapshot.resources ? { resourceCount: snapshot.resources.length } : {}),
+      ...(snapshot.resourceTemplates ? { resourceTemplateCount: snapshot.resourceTemplates.length } : {}),
+      ...(snapshot.prompts ? { promptCount: snapshot.prompts.length } : {}),
+      ...(snapshot.notes?.length ? { notes: snapshot.notes } : {}),
     },
     totalScore: total,
     grade: grade(total),

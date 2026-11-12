@@ -20,10 +20,39 @@ export interface ToolDef {
   inputSchema?: JsonSchema;
 }
 
+export interface ResourceDef {
+  uri: string;
+  name?: string;
+  description?: string;
+  mimeType?: string;
+}
+
+export interface ResourceTemplateDef {
+  uriTemplate: string;
+  name?: string;
+  description?: string;
+  mimeType?: string;
+}
+
+export interface PromptDef {
+  name: string;
+  description?: string;
+  arguments?: { name: string; description?: string; required?: boolean }[];
+}
+
 export interface ServerSnapshot {
   source: string; // how we got it: url, command, or file path
   serverName?: string;
   tools: ToolDef[];
+  // The rest of what a server advertises. For each field, undefined means "not captured"
+  // (an old snapshot file, or a list call that failed: see notes) and is never graded as
+  // missing; null / [] means the server really has none.
+  instructions?: string | null;
+  resources?: ResourceDef[];
+  resourceTemplates?: ResourceTemplateDef[];
+  prompts?: PromptDef[];
+  /** What could not be read, e.g. a list call the server rejected. */
+  notes?: string[];
 }
 
 export type Severity = "error" | "warn" | "info";
@@ -54,7 +83,17 @@ export interface CategoryScore {
 }
 
 export interface Report {
-  snapshot: { source: string; serverName?: string; toolCount: number };
+  snapshot: {
+    source: string;
+    serverName?: string;
+    toolCount: number;
+    /** Length of the server instructions; null = none sent, absent = not captured. */
+    instructionsChars?: number | null;
+    resourceCount?: number;
+    resourceTemplateCount?: number;
+    promptCount?: number;
+    notes?: string[];
+  };
   totalScore: number; // 0-100
   grade: "A" | "B" | "C" | "D" | "F";
   categories: CategoryScore[];

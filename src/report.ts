@@ -29,7 +29,18 @@ export function renderTerminal(report: Report): string {
   const gc = gradeColor(report.grade);
   lines.push("");
   lines.push(chalk.bold("mcpgrade") + chalk.dim(` — agent usability report`));
-  lines.push(chalk.dim(`target: ${report.snapshot.source} · ${report.snapshot.toolCount} tools`));
+  const snap = report.snapshot;
+  const parts = [`${snap.toolCount} tools`];
+  if (snap.resourceCount !== undefined) parts.push(`${snap.resourceCount} resources`);
+  if (snap.resourceTemplateCount !== undefined) parts.push(`${snap.resourceTemplateCount} templates`);
+  if (snap.promptCount !== undefined) parts.push(`${snap.promptCount} prompts`);
+  if (snap.instructionsChars !== undefined) {
+    parts.push(snap.instructionsChars === null ? "no instructions" : `instructions ${snap.instructionsChars} chars`);
+  }
+  lines.push(chalk.dim(`target: ${snap.source} · ${parts.join(" · ")}`));
+  for (const note of snap.notes ?? []) {
+    lines.push(chalk.yellow(`  note: ${note}`));
+  }
   lines.push("");
   lines.push(gc(chalk.bold(`  ${report.grade}   ${report.totalScore}/100`)));
   lines.push("");
