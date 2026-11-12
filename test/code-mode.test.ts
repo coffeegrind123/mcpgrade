@@ -71,6 +71,14 @@ describe("role detection and profile", () => {
     expect(detectRoles({ source: "t", tools })).toEqual({ code: [], batch: [], search: [], docs: [] });
   });
 
+  it("an enum parameter named like code is a mode switch, not a program", () => {
+    const viewer: ToolDef = {
+      name: "render_view", description: "Render a view of the store.",
+      inputSchema: { type: "object", properties: { source: { type: "string", enum: ["plan", "live"], description: "Which renderer." } } },
+    };
+    expect(detectRoles({ source: "t", tools: [viewer] }).code).toEqual([]);
+  });
+
   it("config roles override detection", () => {
     const r = detectRoles(codeFirst(), { execute: "none", search_api: "code" });
     expect(r.code).toEqual(["search_api"]);
@@ -111,6 +119,14 @@ describe("Programmability rules", () => {
     const ro: ToolDef = { ...execute, name: "query", annotations: { readOnlyHint: true } };
     const s = codeFirst({ tools: [ro, searchApi] });
     expect(ids(s)).toEqual([]);
+  });
+
+  it("a code tool that is read-only itself is not asked for a read-only mode (P009)", () => {
+    const ro: ToolDef = {
+      ...execute, name: "query", annotations: { readOnlyHint: true },
+      inputSchema: { type: "object", properties: { code: execute.inputSchema!.properties!.code }, required: ["code"] },
+    };
+    expect(ids(codeFirst({ tools: [ro, searchApi] }))).toEqual([]);
   });
 
   it("a documentation URI that matches nothing is P006", () => {
