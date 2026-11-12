@@ -173,3 +173,16 @@ describe("scoring under the two profiles", () => {
     expect(prog.score).toBeLessThan(50);
   });
 });
+
+describe("terminal report", () => {
+  it("lines every category bar up in one column, Programmability included", async () => {
+    const { renderTerminal } = await import("../src/report.js");
+    const s = codeFirst();
+    const out = renderTerminal(buildReport(s, await runRules(s), gradingContext(s)));
+    // eslint-disable-next-line no-control-regex
+    const plain = out.replace(/\u001b\[[0-9;]*m/g, "");
+    const starts = plain.split("\n").filter((l) => /[█░]{20}/.test(l)).map((l) => l.search(/[█░]/));
+    expect(starts).toHaveLength(6);
+    expect(new Set(starts).size).toBe(1);
+  });
+});
