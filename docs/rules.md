@@ -149,6 +149,19 @@ The server *accepted* a call missing all required arguments. Declared
 
 ---
 
+## Exceptions
+
+When a rule does not fit a tool's design, say so in `.mcpgraderc.json` instead
+of disabling the rule for every tool:
+
+```json
+{ "exceptions": [{ "rule": "S007", "tool": "look", "reason": "one view tool by design" }] }
+```
+
+`tool` is optional (omit it to cover the whole server); `reason` is required.
+Matched findings are listed as accepted, with the reason, and not scored; an
+exception that matches nothing is reported as stale.
+
 ## Scoring
 
 Findings are weighted (error 10 / warn 4 / info 1) and **density-normalized**

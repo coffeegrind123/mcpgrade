@@ -8,6 +8,7 @@ import { runRules, staticRules } from "./rules/index.js";
 import { buildReport } from "./score.js";
 import { renderJson, renderTerminal } from "./report.js";
 import { parseHeaders } from "./headers.js";
+import { applyExceptions } from "./exceptions.js";
 
 // dist/cli.js and src/cli.ts both sit one level below package.json; a release sets the version there.
 const VERSION: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
@@ -65,7 +66,11 @@ program
           await caller.close();
         }
       }
-      const report = buildReport(snapshot, findings);
+      const excepted = applyExceptions(findings, config.exceptions ?? []);
+      const report = buildReport(snapshot, excepted.findings, {
+        accepted: excepted.accepted,
+        unusedExceptions: excepted.unused,
+      });
       console.log(opts.json ? renderJson(report) : renderTerminal(report));
 
       if (opts.eval || opts.evalMock) {

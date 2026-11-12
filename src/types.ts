@@ -84,6 +84,17 @@ export interface CategoryScore {
   findings: Finding[];
 }
 
+/** A rule the config says does not apply, to one tool or to the whole server, and why. */
+export interface RuleException {
+  rule: string;
+  tool?: string;
+  reason: string;
+}
+
+export interface AcceptedFinding extends Finding {
+  reason: string;
+}
+
 export interface Report {
   snapshot: {
     source: string;
@@ -99,7 +110,12 @@ export interface Report {
   totalScore: number; // 0-100
   grade: "A" | "B" | "C" | "D" | "F";
   categories: CategoryScore[];
+  /** Scored findings. */
   findings: Finding[];
+  /** Findings matched by a config exception: listed with the reason, not scored. */
+  accepted: AcceptedFinding[];
+  /** Exceptions that matched nothing: stale config worth deleting. */
+  unusedExceptions: RuleException[];
 }
 
 export const CATEGORY_WEIGHTS: Record<Category, number> = {

@@ -1,10 +1,12 @@
 import {
   CATEGORY_WEIGHTS,
   SEVERITY_PENALTY,
+  type AcceptedFinding,
   type Category,
   type CategoryScore,
   type Finding,
   type Report,
+  type RuleException,
   type ServerSnapshot,
 } from "./types.js";
 
@@ -29,7 +31,11 @@ function grade(score: number): Report["grade"] {
   return "F";
 }
 
-export function buildReport(snapshot: ServerSnapshot, findings: Finding[]): Report {
+export function buildReport(
+  snapshot: ServerSnapshot,
+  findings: Finding[],
+  extra: { accepted?: AcceptedFinding[]; unusedExceptions?: RuleException[] } = {},
+): Report {
   const categories: CategoryScore[] = CATEGORIES.map((cat) => {
     const fs = findings.filter((f) => f.category === cat);
     return { category: cat, score: categoryScore(fs, snapshot.tools.length), findings: fs };
@@ -54,5 +60,7 @@ export function buildReport(snapshot: ServerSnapshot, findings: Finding[]): Repo
     grade: grade(total),
     categories,
     findings,
+    accepted: extra.accepted ?? [],
+    unusedExceptions: extra.unusedExceptions ?? [],
   };
 }

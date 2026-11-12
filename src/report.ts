@@ -71,6 +71,22 @@ export function renderTerminal(report: Report): string {
     }
     lines.push("");
   }
+  if (report.accepted.length) {
+    lines.push(chalk.bold("  Accepted by config (not scored)"));
+    for (const f of report.accepted) {
+      const tool = f.toolName ? chalk.cyan(` [${f.toolName}]`) : "";
+      lines.push(chalk.dim(`    ${f.ruleId}`) + tool + chalk.dim(` ${f.message}`));
+      lines.push(chalk.dim(`      ↳ accepted: ${f.reason}`));
+    }
+    lines.push("");
+  }
+  if (report.unusedExceptions.length) {
+    lines.push(chalk.yellow("  Exceptions that matched nothing (stale config?)"));
+    for (const e of report.unusedExceptions) {
+      lines.push(chalk.yellow(`    ${e.rule}${e.tool ? ` [${e.tool}]` : ""}: ${e.reason}`));
+    }
+    lines.push("");
+  }
   if (report.findings.length === 0) {
     lines.push(chalk.green("  No findings. Ship it. 🚀"));
     lines.push("");

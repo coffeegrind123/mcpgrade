@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Per-tool exceptions.** `.mcpgraderc.json` takes `"exceptions": [{"rule", "tool"?, "reason"}]`.
+  Matched findings are listed as accepted with the reason and not scored; an exception
+  that matches nothing is reported. A config file that exists but is invalid is now an
+  error instead of a silent fallback to defaults.
 - **The whole server is read, not just `tools/list`:** server instructions, resources,
   resource templates and prompts go into the snapshot, and every list follows
   `nextCursor` (tools past the first page were missed before). A list call that fails is
