@@ -82,6 +82,11 @@ describe("loadConfig", () => {
     const dir = await mkdtemp(join(tmpdir(), "mcpgrade-"));
     const path = join(dir, ".mcpgraderc.json");
     await writeFile(path, JSON.stringify({ disable: ["C002"], exceptions: [{ rule: "S007", tool: "look", reason: "r" }] }));
-    expect(await loadConfig(path)).toEqual({ disable: ["C002"], exceptions: [{ rule: "S007", tool: "look", reason: "r" }] });
+    expect(await loadConfig(path)).toEqual({
+      disable: ["C002"],
+      exceptions: [{ rule: "S007", tool: "look", reason: "r" }],
+      profile: "auto",
+      roles: {},
+    });
   });
 });
