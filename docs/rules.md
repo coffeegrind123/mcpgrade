@@ -149,6 +149,70 @@ The server *accepted* a call missing all required arguments. Declared
 
 ---
 
+## P — Programmability (code-mode profile, weight 20%)
+
+A code-first server gives the model a few tools and a way to write programs or
+batches against its API. These rules check that the model is told enough to get
+a program right on the first try. They run only in the **code-mode** profile:
+`--profile code-mode`, or `auto` (the default) when the server has a code or a
+batch tool. Detection reads parameter names and descriptions:
+
+- **code tool:** a string parameter named `code`, `script`, `source`, `program`,
+  a language name, and the like;
+- **batch tool:** an array-of-objects parameter named `ops`, `operations`,
+  `actions`, `commands`, `steps`, `requests`, `calls`, or any such array on a
+  tool whose name contains "batch";
+- **search tool:** a `query`-style string parameter on a tool that searches the
+  API, operations, functions or docs;
+- **API docs:** resources and templates with a TypeScript, JSON Schema, OpenAPI,
+  YAML or Markdown type, or an API/schema/docs name.
+
+The report prints what it found. `"roles": {"<tool>": "code" | "batch" |
+"search" | "none"}` in `.mcpgraderc.json` corrects it. In code-mode the
+category weights become: descriptions 25%, naming 10%, schema 25%, token cost
+10%, consistency 10%, programmability 20%. Programmability is normalised by the
+number of code, batch and search tools, not by the whole catalog, and N003 does
+not apply to the code tool (a generic verb is the convention there).
+
+### P001 · error · Code tool never names its language
+A model that has to guess between JavaScript and Python writes the wrong one.
+**Fix:** name the language and its flavour, e.g. "a JavaScript function body".
+
+### P002 · warn · Code tool does not say how a result comes back
+`return`, the last expression, `print`, stdout: each runtime differs, and a
+program whose value is silently dropped looks like a failure.
+**Fix:** "`return` gives the result (any JSON); console.log is captured".
+
+### P003 · warn · Code tool states no limits
+Without time, memory or output limits the model cannot size a program, and a
+killed program reads as a bug. **Fix:** state the limits and what happens at
+them, or expose them as parameters (`timeout_ms`).
+
+### P004 · warn · Writing code/batch tool does not say what a failure leaves
+After a failure halfway, the model has to know whether to retry the whole thing
+or repair partial changes. **Fix:** say whether it rolls back (all-or-nothing).
+
+### P005 · warn · Nothing points at the API
+The code or batch tool, or the server instructions, must name where the API is
+described: a search tool, or a documentation URI. **Fix:** "Find operations
+with search_api; the typed API is at docs://api/{area}.d.ts".
+
+### P006 · warn · Documentation URI that matches no listed resource
+A URI in a code/batch tool description or the instructions that no resource or
+template matches is a dead end. **Fix:** list the resource, or correct the URI.
+
+### P007 · warn · Batch tool does not state its size limit or result references
+**Fix:** set `maxItems` (or state the most operations per call) and say how a
+later operation refers to an earlier result, e.g. `"$0.id"`.
+
+### P008 · info · Writing code/batch tool takes no idempotency key
+A retried call after a timeout may apply twice. **Fix:** accept an operation id
+and return the first result when it repeats.
+
+### P009 · info · Code tool has no read-only mode
+Without one, even a pure read needs write access and an approval. **Fix:**
+`read_only` (or a dry run) that refuses writes, or a separate read-only tool.
+
 ## Exceptions
 
 When a rule does not fit a tool's design, say so in `.mcpgraderc.json` instead

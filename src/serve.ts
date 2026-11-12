@@ -10,7 +10,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { takeSnapshot } from "./introspect.js";
-import { runRules, staticRules } from "./rules/index.js";
+import { gradingContext, runRules, staticRules } from "./rules/index.js";
 import { buildReport } from "./score.js";
 import { RULE_DOCS } from "./rule-docs.js";
 import type { Finding, Report } from "./types.js";
@@ -58,6 +58,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   schema: "schema",
   token: "token-cost",
   consist: "consistency",
+  prog: "programmability",
 };
 
 function summarize(report: Report, maxFindings: number) {
@@ -121,7 +122,7 @@ export function createServer(): McpServer {
       assertTargetAllowed(target);
       const snapshot = await takeSnapshot({ target });
       const findings = await runRules(snapshot);
-      const report = buildReport(snapshot, findings);
+      const report = buildReport(snapshot, findings, gradingContext(snapshot));
       const payload = summarize(report, max_findings ?? 20);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }],

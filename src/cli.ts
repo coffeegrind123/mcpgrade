@@ -4,7 +4,8 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { takeSnapshot } from "./introspect.js";
 import { loadConfig } from "./config.js";
-import { runRules, staticRules } from "./rules/index.js";
+import { gradingContext, runRules, staticRules } from "./rules/index.js";
+import { parseProfile } from "./roles.js";
 import { buildReport } from "./score.js";
 import { renderJson, renderTerminal } from "./report.js";
 import { parseHeaders } from "./headers.js";
@@ -33,6 +34,7 @@ program
   .option("--fail-on <severity>", "exit 1 if findings at/above severity exist (error|warn|info)")
   .option("--disable <rules>", "comma-separated rule IDs to disable")
   .option("--config <file>", "path to .mcpgraderc.json")
+  .option("--profile <profile>", "auto (default), classic, or code-mode (scores Programmability)")
   .option("--probe", "live-probe error quality: call tools with invalid args (stdio targets only)")
   .option("--eval", "run LLM-powered tool-selection eval (needs ANTHROPIC_API_KEY)")
   .option("--eval-model <model>", "model for --eval (default: claude-haiku-4-5-20251001)")
@@ -51,10 +53,14 @@ program
         ...(config.disable ?? []),
         ...(opts.disable?.split(",").map((s: string) => s.trim()) ?? []),
       ];
-      const findings = await runRules(snapshot, {
+      const lint = {
         disabledRules: disabled,
         tokenBudget: config.tokenBudget,
-      });
+        profile: opts.profile !== undefined ? parseProfile(opts.profile) : config.profile,
+        roles: config.roles,
+      };
+      const findings = await runRules(snapshot, lint);
+      const context = gradingContext(snapshot, lint);
       if (opts.probe) {
         const stdioCmd = opts.stdio ?? (target && !/^https?:\/\//.test(target) && !target.endsWith(".json") ? target : null);
         if (!stdioCmd) throw new Error("--probe currently requires a stdio target");
@@ -70,6 +76,7 @@ program
       const report = buildReport(snapshot, excepted.findings, {
         accepted: excepted.accepted,
         unusedExceptions: excepted.unused,
+        ...context,
       });
       console.log(opts.json ? renderJson(report) : renderTerminal(report));
 
@@ -142,6 +149,15 @@ program
     console.log("T004  info   Too many tools in one server");
     console.log("C003  warn   Non-actionable error messages (--probe)");
     console.log("C004  error  Schema not enforced (--probe)");
+    console.log("P001  error  Code tool never names its language (code-mode)");
+    console.log("P002  warn   Code tool does not say how a result comes back (code-mode)");
+    console.log("P003  warn   Code tool states no limits (code-mode)");
+    console.log("P004  warn   Writing code/batch tool does not say what a failure leaves (code-mode)");
+    console.log("P005  warn   Nothing points at the API a code/batch tool runs against (code-mode)");
+    console.log("P006  warn   Documentation URI that matches no listed resource (code-mode)");
+    console.log("P007  warn   Batch tool does not state its size limit or result references (code-mode)");
+    console.log("P008  info   Writing code/batch tool takes no idempotency key (code-mode)");
+    console.log("P009  info   Code tool has no read-only mode (code-mode)");
   });
 
 program.parseAsync();

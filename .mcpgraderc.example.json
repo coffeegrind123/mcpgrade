@@ -1,5 +1,7 @@
 {
   "disable": ["S008", "C002"],
+  "profile": "auto",
+  "roles": { "run_query": "none" },
   "exceptions": [
     { "rule": "S007", "tool": "render_view", "reason": "one view tool with a mode switch, by design" }
   ],

@@ -8,6 +8,7 @@ const CAT_LABEL: Record<string, string> = {
   schema: "Schema design",
   token: "Token cost",
   consist: "Consistency",
+  prog: "Programmability",
 };
 
 function gradeColor(grade: string): (s: string) => string {
@@ -38,6 +39,13 @@ export function renderTerminal(report: Report): string {
     parts.push(snap.instructionsChars === null ? "no instructions" : `instructions ${snap.instructionsChars} chars`);
   }
   lines.push(chalk.dim(`target: ${snap.source} · ${parts.join(" · ")}`));
+  if (report.profile === "code-mode") {
+    const r = report.roles;
+    const named = (label: string, xs: string[]) => (xs.length ? `${label} ${xs.join(", ")}` : "");
+    const found = [named("code:", r.code), named("batch:", r.batch), named("search:", r.search),
+      r.docs.length ? `docs: ${r.docs.length}` : ""].filter(Boolean).join(" · ");
+    lines.push(chalk.dim(`profile: code-mode · ${found}`));
+  }
   for (const note of snap.notes ?? []) {
     lines.push(chalk.yellow(`  note: ${note}`));
   }

@@ -18,6 +18,7 @@ export interface ToolDef {
   name: string;
   description?: string;
   inputSchema?: JsonSchema;
+  annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; idempotentHint?: boolean; [key: string]: unknown };
 }
 
 export interface ResourceDef {
@@ -56,7 +57,7 @@ export interface ServerSnapshot {
 }
 
 export type Severity = "error" | "warn" | "info";
-export type Category = "desc" | "name" | "schema" | "token" | "consist";
+export type Category = "desc" | "name" | "schema" | "token" | "consist" | "prog";
 
 export interface Finding {
   ruleId: string;
@@ -107,6 +108,10 @@ export interface Report {
     promptCount?: number;
     notes?: string[];
   };
+  /** classic, or code-mode (scores Programmability); see roles.ts. */
+  profile: "classic" | "code-mode";
+  /** Detected (or configured) tool roles and API docs. */
+  roles: { code: string[]; batch: string[]; search: string[]; docs: string[] };
   totalScore: number; // 0-100
   grade: "A" | "B" | "C" | "D" | "F";
   categories: CategoryScore[];
@@ -124,6 +129,17 @@ export const CATEGORY_WEIGHTS: Record<Category, number> = {
   schema: 0.3,
   token: 0.15,
   consist: 0.1,
+  prog: 0,
+};
+
+/** code-mode makes room for Programmability by scaling the classic weights down to 80%. */
+export const CODE_MODE_WEIGHTS: Record<Category, number> = {
+  desc: 0.25,
+  name: 0.1,
+  schema: 0.25,
+  token: 0.1,
+  consist: 0.1,
+  prog: 0.2,
 };
 
 export const SEVERITY_PENALTY: Record<Severity, number> = {

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **code-mode profile.** Servers built around a code tool, a batch tool and a searchable
+  API are graded on what matters for them: a new Programmability category (P001-P009:
+  language, how a result comes back, limits, rollback, where the API is described,
+  dangling doc URIs, batch size and result references, idempotency keys, a read-only
+  mode). `--profile auto` (default) turns it on when a code or batch tool is detected;
+  the report prints the detected roles, and `"roles"` in the config corrects them. In
+  code-mode, N003 does not apply to the code tool.
+
 - **Per-tool exceptions.** `.mcpgraderc.json` takes `"exceptions": [{"rule", "tool"?, "reason"}]`.
   Matched findings are listed as accepted with the reason and not scored; an exception
   that matches nothing is reported. A config file that exists but is invalid is now an

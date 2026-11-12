@@ -1,5 +1,7 @@
+import type { Profile, Roles } from "./roles.js";
 import {
   CATEGORY_WEIGHTS,
+  CODE_MODE_WEIGHTS,
   SEVERITY_PENALTY,
   type AcceptedFinding,
   type Category,
@@ -11,6 +13,7 @@ import {
 } from "./types.js";
 
 const CATEGORIES: Category[] = ["desc", "name", "schema", "token", "consist"];
+const NO_ROLES: Roles = { code: [], batch: [], search: [], docs: [] };
 
 /**
  * Density-based scoring: penalties are normalized by catalog size, so
@@ -34,14 +37,22 @@ function grade(score: number): Report["grade"] {
 export function buildReport(
   snapshot: ServerSnapshot,
   findings: Finding[],
-  extra: { accepted?: AcceptedFinding[]; unusedExceptions?: RuleException[] } = {},
+  extra: { accepted?: AcceptedFinding[]; unusedExceptions?: RuleException[]; profile?: Profile; roles?: Roles } = {},
 ): Report {
-  const categories: CategoryScore[] = CATEGORIES.map((cat) => {
+  const profile = extra.profile ?? "classic";
+  const roles = extra.roles ?? NO_ROLES;
+  const cats = profile === "code-mode" ? [...CATEGORIES, "prog" as const] : CATEGORIES;
+  const weights = profile === "code-mode" ? CODE_MODE_WEIGHTS : CATEGORY_WEIGHTS;
+  // Programmability findings are about the code, batch and search tools, so they are
+  // normalised by how many of those there are, not by the whole catalog.
+  const progTools = roles.code.length + roles.batch.length + roles.search.length;
+  const categories: CategoryScore[] = cats.map((cat) => {
     const fs = findings.filter((f) => f.category === cat);
-    return { category: cat, score: categoryScore(fs, snapshot.tools.length), findings: fs };
+    const size = cat === "prog" ? progTools : snapshot.tools.length;
+    return { category: cat, score: categoryScore(fs, size), findings: fs };
   });
   const total = Math.round(
-    categories.reduce((acc, c) => acc + c.score * CATEGORY_WEIGHTS[c.category], 0),
+    categories.reduce((acc, c) => acc + c.score * weights[c.category], 0),
   );
   return {
     snapshot: {
@@ -56,6 +67,8 @@ export function buildReport(
       ...(snapshot.prompts ? { promptCount: snapshot.prompts.length } : {}),
       ...(snapshot.notes?.length ? { notes: snapshot.notes } : {}),
     },
+    profile,
+    roles,
     totalScore: total,
     grade: grade(total),
     categories,

@@ -14,6 +14,8 @@ API) as well as classic ones. So far it adds:
 - **The whole server is read:** instructions, resources, resource templates and prompts, with paging.
 - **I001 / I002:** missing server instructions, and instructions past what Claude Code keeps.
 - **One defect, one charge:** S008 no longer doubles D004 (upstream issue #9).
+- **code-mode profile:** detects code, batch and search tools and grades Programmability (P001-P009)
+  instead of only pushing toward many small tools. `--profile auto|classic|code-mode`.
 
 Install from a release tag, which carries a built `dist/` (nothing is built on your machine):
 

@@ -6,7 +6,7 @@
 export interface RuleDoc {
   title: string;
   severity: "error" | "warn" | "info";
-  category: "descriptions" | "naming" | "schema" | "token-cost" | "consistency";
+  category: "descriptions" | "naming" | "schema" | "token-cost" | "consistency" | "programmability";
   /** Why this degrades agent behaviour. */
   why: string;
   /** Concrete remedy, with examples where the docs provide them. */
@@ -208,6 +208,69 @@ export const RULE_DOCS: Record<string, RuleDoc> = {
     "severity": "error",
     "category": "consistency",
     "why": "The server *accepted* a call missing all required arguments. Declared `required` that isn't enforced is worse than none — the model trusts it. ---",
+    "fix": null
+  },
+  "P001": {
+    "title": "Code tool never names its language",
+    "severity": "error",
+    "category": "programmability",
+    "why": "A model that has to guess between JavaScript and Python writes the wrong one. **Fix:** name the language and its flavour, e.g. \"a JavaScript function body\".",
+    "fix": null
+  },
+  "P002": {
+    "title": "Code tool does not say how a result comes back",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "`return`, the last expression, `print`, stdout: each runtime differs, and a program whose value is silently dropped looks like a failure. **Fix:** \"`return` gives the result (any JSON); console.log is captured\".",
+    "fix": null
+  },
+  "P003": {
+    "title": "Code tool states no limits",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "Without time, memory or output limits the model cannot size a program, and a killed program reads as a bug. **Fix:** state the limits and what happens at them, or expose them as parameters (`timeout_ms`).",
+    "fix": null
+  },
+  "P004": {
+    "title": "Writing code/batch tool does not say what a failure leaves",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "After a failure halfway, the model has to know whether to retry the whole thing or repair partial changes. **Fix:** say whether it rolls back (all-or-nothing).",
+    "fix": null
+  },
+  "P005": {
+    "title": "Nothing points at the API",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "The code or batch tool, or the server instructions, must name where the API is described: a search tool, or a documentation URI. **Fix:** \"Find operations with search_api; the typed API is at docs://api/{area}.d.ts\".",
+    "fix": null
+  },
+  "P006": {
+    "title": "Documentation URI that matches no listed resource",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "A URI in a code/batch tool description or the instructions that no resource or template matches is a dead end. **Fix:** list the resource, or correct the URI.",
+    "fix": null
+  },
+  "P007": {
+    "title": "Batch tool does not state its size limit or result references",
+    "severity": "warn",
+    "category": "programmability",
+    "why": "**Fix:** set `maxItems` (or state the most operations per call) and say how a later operation refers to an earlier result, e.g. `\"$0.id\"`.",
+    "fix": null
+  },
+  "P008": {
+    "title": "Writing code/batch tool takes no idempotency key",
+    "severity": "info",
+    "category": "programmability",
+    "why": "A retried call after a timeout may apply twice. **Fix:** accept an operation id and return the first result when it repeats.",
+    "fix": null
+  },
+  "P009": {
+    "title": "Code tool has no read-only mode",
+    "severity": "info",
+    "category": "programmability",
+    "why": "Without one, even a pure read needs write access and an approval. **Fix:** `read_only` (or a dry run) that refuses writes, or a separate read-only tool.",
     "fix": null
   }
 };
