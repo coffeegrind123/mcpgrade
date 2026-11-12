@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import chalk from "chalk";
 import { takeSnapshot } from "./introspect.js";
@@ -8,12 +9,15 @@ import { buildReport } from "./score.js";
 import { renderJson, renderTerminal } from "./report.js";
 import { parseHeaders } from "./headers.js";
 
+// dist/cli.js and src/cli.ts both sit one level below package.json; a release sets the version there.
+const VERSION: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+
 const program = new Command();
 
 program
   .name("mcpgrade")
   .description("Lighthouse for MCP servers — lint for agent usability, not just spec compliance")
-  .version("0.4.0");
+  .version(VERSION);
 
 program
   .argument("[target]", "server URL (http/https), a local command, or a snapshot .json")

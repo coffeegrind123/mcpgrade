@@ -1,0 +1,50 @@
+name: Release
+
+# Installs go through a git tag (npx github:<owner>/mcpgrade#v<version>). A tag must therefore
+# carry a built dist/: there is no "prepare" script, so npm never builds on the user's machine.
+# The tagged commit sits on top of main and is reachable only through its tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without the v, e.g. 0.5.0-fork.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check the version
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "not a semver version: $VERSION" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm version "$VERSION" --no-git-tag-version
+      - run: npm run build
+      - run: npm test
+      - name: Tag a commit that carries dist/
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "tag v$VERSION already exists" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git add -f dist
+          git commit -m "release: v$VERSION with dist/"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
