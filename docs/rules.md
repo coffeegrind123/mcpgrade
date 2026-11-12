@@ -88,7 +88,9 @@ group related params into one described object.
 
 ### S008 · info · Complex parameter without example
 For object/array params, one example in `examples` or an "e.g." in the
-description measurably improves argument construction.
+description measurably improves argument construction. Not reported for a
+parameter D004 already flags: one undocumented parameter is one defect, and
+D004's fix asks for the example too.
 
 ## I — Server instructions (scored under Descriptions)
 

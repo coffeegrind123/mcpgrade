@@ -8,6 +8,8 @@
   reported as a note; snapshot files may carry the same fields.
 - **New rules I001 / I002:** no server instructions on a server that needs them, and
   instructions past the 4,096 characters Claude Code keeps.
+- **One defect, one charge** ([#9](https://github.com/TengByte/mcpgrade/issues/9)):
+  S008 is no longer reported for a parameter D004 already flags. Findings carry `param`.
 - **`--eval` scores five outcomes, not right/wrong** ([#1](https://github.com/TengByte/mcpgrade/issues/1),
   suggested by Mads Hansen). Every task lands in one bucket: *correct call*,
   *correct refusal*, *correct clarification*, *unsafe plausible action* (a confident

@@ -55,7 +55,7 @@ export const D004: Rule = {
       walkParams(t.inputSchema, (name, param) => {
         if (!param.description?.trim() && !param.enum) {
           out.push({
-            ruleId: "D004", severity: "error", category: "desc", toolName: t.name,
+            ruleId: "D004", severity: "error", category: "desc", toolName: t.name, param: name,
             message: `Parameter "${name}" of "${t.name}" has no description.`,
             fix: `Describe what "${name}" means, its format, and give an example value.`,
           });

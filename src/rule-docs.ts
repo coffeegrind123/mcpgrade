@@ -137,7 +137,7 @@ export const RULE_DOCS: Record<string, RuleDoc> = {
     "title": "Complex parameter without example",
     "severity": "info",
     "category": "schema",
-    "why": "For object/array params, one example in `examples` or an \"e.g.\" in the description measurably improves argument construction.",
+    "why": "For object/array params, one example in `examples` or an \"e.g.\" in the description measurably improves argument construction. Not reported for a parameter D004 already flags: one undocumented parameter is one defect, and D004's fix asks for the example too.",
     "fix": null
   },
   "I001": {

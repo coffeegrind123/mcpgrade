@@ -171,7 +171,7 @@ export const S008: Rule = {
         const complex = p.type === "object" || p.type === "array";
         if (complex && !p.examples && !(p.description ?? "").includes("e.g.")) {
           out.push({
-            ruleId: "S008", severity: "info", category: "schema", toolName: t.name,
+            ruleId: "S008", severity: "info", category: "schema", toolName: t.name, param: name,
             message: `Complex parameter "${name}" of "${t.name}" has no example.`,
             fix: `Add "examples" or an "e.g." in the description.`,
           });

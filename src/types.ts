@@ -63,6 +63,8 @@ export interface Finding {
   severity: Severity;
   category: Category;
   toolName?: string;
+  /** The top-level parameter a finding is about, when it is about one. */
+  param?: string;
   message: string;
   fix: string;
 }
