@@ -59,10 +59,11 @@ export function renderTerminal(report: Report): string {
   lines.push("");
   lines.push(gc(chalk.bold(`  ${report.grade}   ${report.totalScore}/100`)));
   lines.push("");
+  const labelWidth = Math.max(...report.categories.map((c) => CAT_LABEL[c.category].length)) + 1;
   for (const cat of report.categories) {
     const bar = "█".repeat(Math.round(cat.score / 5)).padEnd(20, "░");
     lines.push(
-      `  ${CAT_LABEL[cat.category].padEnd(14)} ${gradeColor(cat.score >= 90 ? "A" : cat.score >= 70 ? "C" : "F")(bar)} ${String(cat.score).padStart(3)}`,
+      `  ${CAT_LABEL[cat.category].padEnd(labelWidth)} ${gradeColor(cat.score >= 90 ? "A" : cat.score >= 70 ? "C" : "F")(bar)} ${String(cat.score).padStart(3)}`,
     );
   }
   lines.push("");
