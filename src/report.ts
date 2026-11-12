@@ -46,6 +46,13 @@ export function renderTerminal(report: Report): string {
       r.docs.length ? `docs: ${r.docs.length}` : ""].filter(Boolean).join(" · ");
     lines.push(chalk.dim(`profile: code-mode · ${found}`));
   }
+  if (report.reach) {
+    const r = report.reach;
+    const ops = r.apiOperations !== undefined
+      ? ` · ${r.apiOperations} operations reachable (declared), ${r.operationsPer1kTokens} per 1k tokens`
+      : "";
+    lines.push(chalk.dim(`catalog: ~${r.catalogTokens} tokens per request${ops}`));
+  }
   for (const note of snap.notes ?? []) {
     lines.push(chalk.yellow(`  note: ${note}`));
   }

@@ -121,6 +121,11 @@ export interface Report {
   accepted: AcceptedFinding[];
   /** Exceptions that matched nothing: stale config worth deleting. */
   unusedExceptions: RuleException[];
+  /**
+   * Not scored. What the tool list costs per request, and, when the config declares how many
+   * operations the API offers, how many of them each 1k catalog tokens reaches.
+   */
+  reach?: { catalogTokens: number; apiOperations?: number; operationsPer1kTokens?: number };
 }
 
 export const CATEGORY_WEIGHTS: Record<Category, number> = {

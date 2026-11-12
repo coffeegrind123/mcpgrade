@@ -37,7 +37,13 @@ function grade(score: number): Report["grade"] {
 export function buildReport(
   snapshot: ServerSnapshot,
   findings: Finding[],
-  extra: { accepted?: AcceptedFinding[]; unusedExceptions?: RuleException[]; profile?: Profile; roles?: Roles } = {},
+  extra: {
+    accepted?: AcceptedFinding[];
+    unusedExceptions?: RuleException[];
+    profile?: Profile;
+    roles?: Roles;
+    reach?: Report["reach"];
+  } = {},
 ): Report {
   const profile = extra.profile ?? "classic";
   const roles = extra.roles ?? NO_ROLES;
@@ -75,5 +81,6 @@ export function buildReport(
     findings,
     accepted: extra.accepted ?? [],
     unusedExceptions: extra.unusedExceptions ?? [],
+    ...(extra.reach ? { reach: extra.reach } : {}),
   };
 }

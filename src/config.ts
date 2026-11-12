@@ -14,6 +14,15 @@ export interface McpgradeConfig {
   profile?: ProfileSetting;
   /** Corrects role detection per tool: "code", "batch", "search" or "none". */
   roles?: Record<string, Role>;
+  /** How many operations the server's API offers (through its code/batch/search tools); reported, not scored. */
+  apiOperations?: number;
+}
+
+function parseOperations(raw: unknown): number {
+  if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 1) {
+    throw new Error('"apiOperations" must be a positive whole number');
+  }
+  return raw;
 }
 
 /** Load config from --config path or ./.mcpgraderc.json if present. */
@@ -35,6 +44,7 @@ export async function loadConfig(explicitPath?: string): Promise<McpgradeConfig>
       exceptions: parseExceptions(raw.exceptions),
       profile: parseProfile(raw.profile),
       roles: parseRoles(raw.roles),
+      ...(raw.apiOperations !== undefined ? { apiOperations: parseOperations(raw.apiOperations) } : {}),
     };
   } catch (err) {
     throw new Error(`${path}: ${err instanceof Error ? err.message : String(err)}`);

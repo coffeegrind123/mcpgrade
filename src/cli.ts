@@ -6,6 +6,7 @@ import { takeSnapshot } from "./introspect.js";
 import { loadConfig } from "./config.js";
 import { gradingContext, runRules, staticRules } from "./rules/index.js";
 import { parseProfile } from "./roles.js";
+import { catalogTokens } from "./rules/token.js";
 import { buildReport } from "./score.js";
 import { renderJson, renderTerminal } from "./report.js";
 import { parseHeaders } from "./headers.js";
@@ -73,10 +74,21 @@ program
         }
       }
       const excepted = applyExceptions(findings, config.exceptions ?? []);
+      const tokens = await catalogTokens(snapshot);
+      const reach = {
+        catalogTokens: tokens,
+        ...(config.apiOperations !== undefined
+          ? {
+              apiOperations: config.apiOperations,
+              operationsPer1kTokens: Math.round((config.apiOperations / Math.max(tokens, 1)) * 1000 * 10) / 10,
+            }
+          : {}),
+      };
       const report = buildReport(snapshot, excepted.findings, {
         accepted: excepted.accepted,
         unusedExceptions: excepted.unused,
         ...context,
+        reach,
       });
       console.log(opts.json ? renderJson(report) : renderTerminal(report));
 

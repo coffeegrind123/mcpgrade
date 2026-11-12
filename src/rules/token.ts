@@ -94,3 +94,12 @@ export function checkSprawl(
     },
   ];
 }
+
+/** What the whole tool list costs on every request, as T001 counts it. */
+export async function catalogTokens(s: ServerSnapshot): Promise<number> {
+  let total = 0;
+  for (const t of s.tools) {
+    total += await countToolTokens(t);
+  }
+  return total;
+}

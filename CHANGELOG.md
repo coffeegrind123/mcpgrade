@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Reach line.** The report shows the tool list's cost per request and, with `apiOperations`
+  declared in the config, operations reachable per 1k catalog tokens. Reported, not scored.
+
 - **T005: tool sprawl.** 15+ tools and no code or batch tool is reported (info) with the
   code-mode alternative; it replaces T004 when both apply. `tokenBudget.sprawlTools` sets
   the threshold.

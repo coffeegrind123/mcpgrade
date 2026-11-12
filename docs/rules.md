@@ -220,6 +220,15 @@ and return the first result when it repeats.
 Without one, even a pure read needs write access and an approval. **Fix:**
 `read_only` (or a dry run) that refuses writes, or a separate read-only tool.
 
+## Reach (reported, not scored)
+
+The report shows what the tool list costs on every request. With
+`"apiOperations": <n>` in `.mcpgraderc.json` (how many operations the API offers
+through its code, batch and search tools) it also shows operations per 1k
+catalog tokens: how much a code-first server reaches for what it costs. mcpgrade
+cannot count the operations itself without calling the server's tools, so the
+number is declared and labelled as such.
+
 ## Exceptions
 
 When a rule does not fit a tool's design, say so in `.mcpgraderc.json` instead
