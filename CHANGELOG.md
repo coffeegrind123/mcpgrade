@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **T005: tool sprawl.** 15+ tools and no code or batch tool is reported (info) with the
+  code-mode alternative; it replaces T004 when both apply. `tokenBudget.sprawlTools` sets
+  the threshold.
+
 - **code-mode profile.** Servers built around a code tool, a batch tool and a searchable
   API are graded on what matters for them: a new Programmability category (P001-P009:
   language, how a result comes back, limits, rollback, where the API is described,

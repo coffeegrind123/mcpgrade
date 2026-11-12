@@ -4,7 +4,7 @@ import { nameRules } from "./name.js";
 import { schemaRules } from "./schema.js";
 import { consistRules } from "./consist.js";
 import { serverRules } from "./server.js";
-import { checkTokenRules, DEFAULT_BUDGET, type TokenBudget } from "./token.js";
+import { checkSprawl, checkTokenRules, DEFAULT_BUDGET, type TokenBudget } from "./token.js";
 import { checkProgRules } from "./prog.js";
 import { detectRoles, resolveProfile, type Profile, type ProfileSetting, type Role, type Roles } from "../roles.js";
 
@@ -65,5 +65,8 @@ export async function runRules(
   if (profile === "code-mode") {
     findings.push(...checkProgRules(snapshot, roles).filter((f) => !disabled.has(f.ruleId)));
   }
-  return dropOverlaps(exemptCodeTools(findings, profile, roles));
+  const sprawled = disabled.has("T005")
+    ? findings
+    : checkSprawl(snapshot, roles, findings, { ...DEFAULT_BUDGET, ...opts.tokenBudget });
+  return dropOverlaps(exemptCodeTools(sprawled, profile, roles));
 }

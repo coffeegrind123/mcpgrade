@@ -8,6 +8,7 @@
   "tokenBudget": {
     "totalBudget": 8000,
     "perToolBudget": 1200,
-    "maxTools": 25
+    "maxTools": 25,
+    "sprawlTools": 15
   }
 }

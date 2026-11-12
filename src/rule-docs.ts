@@ -182,6 +182,13 @@ export const RULE_DOCS: Record<string, RuleDoc> = {
     "why": "Big catalogs dilute selection accuracy and burn tokens. Split by domain, or gate rare tools behind a mode.",
     "fix": null
   },
+  "T005": {
+    "title": "15+ tools and no code or batch tool",
+    "severity": "info",
+    "category": "token-cost",
+    "why": "Every capability is its own tool, paid for on every request, and multi-step work takes one call per step. Reported instead of T004 when both apply. **Fix:** expose the API to a code tool (or a batch tool) plus a search tool and keep only the entry points as tools, or split the server by domain. `tokenBudget.sprawlTools` sets the threshold.",
+    "fix": null
+  },
   "C001": {
     "title": "Tools with heavily overlapping functionality",
     "severity": "warn",

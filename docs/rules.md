@@ -127,6 +127,13 @@ zero information gain.
 Big catalogs dilute selection accuracy and burn tokens. Split by domain, or
 gate rare tools behind a mode.
 
+### T005 · info · 15+ tools and no code or batch tool
+Every capability is its own tool, paid for on every request, and multi-step
+work takes one call per step. Reported instead of T004 when both apply.
+**Fix:** expose the API to a code tool (or a batch tool) plus a search tool and
+keep only the entry points as tools, or split the server by domain.
+`tokenBudget.sprawlTools` sets the threshold.
+
 ## C — Consistency (weight 10%)
 
 ### C001 · warn · Tools with heavily overlapping functionality

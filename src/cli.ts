@@ -147,6 +147,7 @@ program
     console.log("T002  warn   Single tool schema token cost over budget");
     console.log("T003  warn   Repeated boilerplate across descriptions");
     console.log("T004  info   Too many tools in one server");
+    console.log("T005  info   Many tools and no code or batch tool");
     console.log("C003  warn   Non-actionable error messages (--probe)");
     console.log("C004  error  Schema not enforced (--probe)");
     console.log("P001  error  Code tool never names its language (code-mode)");

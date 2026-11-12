@@ -9,12 +9,14 @@ export interface TokenBudget {
   totalBudget: number; // T001
   perToolBudget: number; // T002
   maxTools: number; // T004
+  sprawlTools: number; // T005
 }
 
 export const DEFAULT_BUDGET: TokenBudget = {
   totalBudget: 8000,
   perToolBudget: 1200,
   maxTools: 25,
+  sprawlTools: 15,
 };
 
 export async function checkTokenRules(
@@ -68,4 +70,27 @@ export async function checkTokenRules(
     });
   }
   return out;
+}
+
+/**
+ * T005: many tools and no code or batch tool. Every capability is then its own tool, paid for
+ * on every request. It replaces T004 (one defect, one charge), and its fix includes T004's.
+ */
+export function checkSprawl(
+  s: ServerSnapshot,
+  roles: { code: string[]; batch: string[] },
+  findings: Finding[],
+  budget: TokenBudget = DEFAULT_BUDGET,
+): Finding[] {
+  if (s.tools.length < budget.sprawlTools || roles.code.length || roles.batch.length) {
+    return findings;
+  }
+  return [
+    ...findings.filter((f) => f.ruleId !== "T004"),
+    {
+      ruleId: "T005", severity: "info", category: "token",
+      message: `${s.tools.length} tools and no code or batch tool: every capability is its own tool, paid for on every request, and multi-step work takes one call per step.`,
+      fix: "Expose the API to a code tool (or a batch tool) plus a search tool, keeping only entry points as tools; or split the server by domain.",
+    },
+  ];
 }
