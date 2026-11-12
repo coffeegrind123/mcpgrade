@@ -117,3 +117,16 @@ describe("snapshotFromFile", () => {
     expect(s.instructions).toBeUndefined();
   });
 });
+
+describe("snapshotToJson", () => {
+  it("round-trips through snapshotFromFile, keeping unknown fields unknown", async () => {
+    const { snapshotToJson } = await import("../src/introspect.js");
+    const dir = await mkdtemp(join(tmpdir(), "mcpgrade-"));
+    const path = join(dir, "saved.json");
+    const s = { source: "x", serverName: "srv", tools: [{ name: "a" }], instructions: null, resources: [{ uri: "doc://1" }] };
+    await writeFile(path, snapshotToJson(s));
+    const back = await snapshotFromFile(path);
+    expect(back).toEqual({ source: path, serverName: "srv", tools: [{ name: "a" }], instructions: null, resources: [{ uri: "doc://1" }] });
+    expect(back.prompts).toBeUndefined();
+  });
+});

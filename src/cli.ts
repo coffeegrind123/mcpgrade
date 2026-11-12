@@ -2,7 +2,8 @@
 import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import chalk from "chalk";
-import { takeSnapshot } from "./introspect.js";
+import { writeFile } from "node:fs/promises";
+import { snapshotToJson, takeSnapshot } from "./introspect.js";
 import { loadConfig } from "./config.js";
 import { gradingContext, runRules, staticRules } from "./rules/index.js";
 import { parseProfile } from "./roles.js";
@@ -36,6 +37,7 @@ program
   .option("--disable <rules>", "comma-separated rule IDs to disable")
   .option("--config <file>", "path to .mcpgraderc.json")
   .option("--profile <profile>", "auto (default), classic, or code-mode (scores Programmability)")
+  .option("--save-snapshot <file>", "write what was graded (tools, instructions, resources, prompts) as a snapshot file")
   .option("--probe", "live-probe error quality: call tools with invalid args (stdio targets only)")
   .option("--eval", "run LLM-powered tool-selection eval (needs ANTHROPIC_API_KEY)")
   .option("--eval-model <model>", "model for --eval (default: claude-haiku-4-5-20251001)")
@@ -50,6 +52,9 @@ program
         snapshot: opts.snapshot,
         headers: parseHeaders(opts.header),
       });
+      if (opts.saveSnapshot) {
+        await writeFile(opts.saveSnapshot, snapshotToJson(snapshot), "utf8");
+      }
       const disabled = [
         ...(config.disable ?? []),
         ...(opts.disable?.split(",").map((s: string) => s.trim()) ?? []),

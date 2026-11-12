@@ -201,3 +201,18 @@ export async function takeSnapshot(opts: {
   }
   throw new Error("No target. Pass a URL, a command via --stdio, or --snapshot file.json");
 }
+
+/**
+ * The snapshot as a file snapshotFromFile reads back unchanged: what --save-snapshot writes, so
+ * other tools can grade exactly what this run graded. Fields that were not captured stay out.
+ * Auth headers are never part of a snapshot.
+ */
+export function snapshotToJson(s: ServerSnapshot): string {
+  const out: Record<string, unknown> = { serverName: s.serverName, tools: s.tools };
+  for (const key of ["instructions", "resources", "resourceTemplates", "prompts", "notes"] as const) {
+    if (s[key] !== undefined) {
+      out[key] = s[key];
+    }
+  }
+  return JSON.stringify(out, null, 2) + "\n";
+}

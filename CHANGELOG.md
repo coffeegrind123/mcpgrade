@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **`--save-snapshot <file>`** writes what the run graded (tools, instructions, resources,
+  templates, prompts) as a snapshot file, so another tool can lint the same catalog without
+  a second connection or the auth headers.
+
 - **Reach line.** The report shows the tool list's cost per request and, with `apiOperations`
   declared in the config, operations reachable per 1k catalog tokens. Reported, not scored.
 
