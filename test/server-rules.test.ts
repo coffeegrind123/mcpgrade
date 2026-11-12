@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { runRules } from "../src/rules/index.js";
 import { I001, I002, INSTRUCTIONS_MAX_CHARS } from "../src/rules/server.js";
-import type { ToolDef } from "../src/types.js";
+import type { ServerSnapshot, ToolDef } from "../src/types.js";
 
 const tools = (n: number): ToolDef[] => Array.from({ length: n }, (_, i) => ({ name: `tool_${i}` }));
 
@@ -41,5 +42,30 @@ describe("I002 instructions too long", () => {
 
   it("is quiet at the limit", () => {
     expect(I002.check({ source: "t", tools: [], instructions: "x".repeat(INSTRUCTIONS_MAX_CHARS) })).toEqual([]);
+  });
+});
+
+describe("D004 / S008 overlap (issue #9)", () => {
+  const snap: ServerSnapshot = {
+    source: "t",
+    tools: [{
+      name: "create_items",
+      description: "Create items in the store. Use for new records. Returns the created ids.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          items: { type: "array" },
+          tags: { type: "array", description: "Labels to attach to every item." },
+        },
+        required: ["items"],
+      },
+    }],
+  };
+
+  it("charges an undescribed complex parameter once (D004), not twice", async () => {
+    const f = await runRules(snap);
+    const on = (rule: string) => f.filter((x) => x.ruleId === rule).map((x) => x.param);
+    expect(on("D004")).toEqual(["items"]);
+    expect(on("S008")).toEqual(["tags"]);
   });
 });
