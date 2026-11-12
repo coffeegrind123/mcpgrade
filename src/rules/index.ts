@@ -3,9 +3,10 @@ import { descRules } from "./desc.js";
 import { nameRules } from "./name.js";
 import { schemaRules } from "./schema.js";
 import { consistRules } from "./consist.js";
+import { serverRules } from "./server.js";
 import { checkTokenRules, DEFAULT_BUDGET, type TokenBudget } from "./token.js";
 
-export const staticRules: Rule[] = [...descRules, ...nameRules, ...schemaRules, ...consistRules];
+export const staticRules: Rule[] = [...descRules, ...nameRules, ...schemaRules, ...consistRules, ...serverRules];
 
 export interface LintOptions {
   disabledRules?: string[];

@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const txt = readFileSync("docs/rules.md", "utf8");
-const catOf = { D: "descriptions", N: "naming", S: "schema", T: "token-cost", C: "consistency" };
+const catOf = { D: "descriptions", I: "descriptions", N: "naming", S: "schema", T: "token-cost", C: "consistency" };
 const re = /### (\w\d{3}) · (\w+) · ([^\n]+)\n([\s\S]*?)(?=\n### |\n## |$)/g;
 const out = {};
 for (const [, rid, sev, title, body] of txt.matchAll(re)) {

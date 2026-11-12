@@ -6,6 +6,8 @@
   resource templates and prompts go into the snapshot, and every list follows
   `nextCursor` (tools past the first page were missed before). A list call that fails is
   reported as a note; snapshot files may carry the same fields.
+- **New rules I001 / I002:** no server instructions on a server that needs them, and
+  instructions past the 4,096 characters Claude Code keeps.
 - **`--eval` scores five outcomes, not right/wrong** ([#1](https://github.com/TengByte/mcpgrade/issues/1),
   suggested by Mads Hansen). Every task lands in one bucket: *correct call*,
   *correct refusal*, *correct clarification*, *unsafe plausible action* (a confident

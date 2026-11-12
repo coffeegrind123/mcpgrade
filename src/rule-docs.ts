@@ -140,6 +140,20 @@ export const RULE_DOCS: Record<string, RuleDoc> = {
     "why": "For object/array params, one example in `examples` or an \"e.g.\" in the description measurably improves argument construction.",
     "fix": null
   },
+  "I001": {
+    "title": "No server instructions",
+    "severity": "warn",
+    "category": "descriptions",
+    "why": "A server with 5 or more tools, or any resources, templates or prompts, that sends no instructions leaves the model to guess where to start and how the parts fit together; most clients never surface resources or prompts on their own. **Fix:** return instructions: where to start, the usual workflow, and where the API and docs live.",
+    "fix": null
+  },
+  "I002": {
+    "title": "Instructions longer than 4096 characters",
+    "severity": "warn",
+    "category": "descriptions",
+    "why": "Claude Code keeps the first 4,096 characters of a server's instructions; the rest never reaches the model. **Fix:** front-load what a model needs before its first call and move the rest into resources or a guide.",
+    "fix": null
+  },
   "T001": {
     "title": "Catalog total >8k tokens",
     "severity": "error",

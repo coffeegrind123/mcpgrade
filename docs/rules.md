@@ -90,6 +90,23 @@ group related params into one described object.
 For object/array params, one example in `examples` or an "e.g." in the
 description measurably improves argument construction.
 
+## I — Server instructions (scored under Descriptions)
+
+Instructions come back from `initialize` and clients put them in the system
+prompt. A snapshot file without an `instructions` field is not graded on these.
+
+### I001 · warn · No server instructions
+A server with 5 or more tools, or any resources, templates or prompts, that
+sends no instructions leaves the model to guess where to start and how the parts
+fit together; most clients never surface resources or prompts on their own.
+**Fix:** return instructions: where to start, the usual workflow, and where the
+API and docs live.
+
+### I002 · warn · Instructions longer than 4096 characters
+Claude Code keeps the first 4,096 characters of a server's instructions; the
+rest never reaches the model. **Fix:** front-load what a model needs before its
+first call and move the rest into resources or a guide.
+
 ## T — Token cost (weight 15%)
 
 ### T001 · error · Catalog total >8k tokens
