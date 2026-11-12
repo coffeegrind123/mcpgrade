@@ -64,6 +64,10 @@ describe("D004 / S008 overlap (issue #9)", () => {
 
   it("charges an undescribed complex parameter once (D004), not twice", async () => {
     const f = await runRules(snap);
+    // By message first, so the check does not depend on the param field it introduced.
+    expect(f.filter((x) => x.ruleId === "S008").map((x) => x.message)).toEqual([
+      'Complex parameter "tags" of "create_items" has no example.',
+    ]);
     const on = (rule: string) => f.filter((x) => x.ruleId === rule).map((x) => x.param);
     expect(on("D004")).toEqual(["items"]);
     expect(on("S008")).toEqual(["tags"]);
