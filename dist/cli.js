@@ -1,0 +1,171 @@
+#!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { Command } from "commander";
+import chalk from "chalk";
+import { writeFile } from "node:fs/promises";
+import { snapshotToJson, takeSnapshot } from "./introspect.js";
+import { loadConfig } from "./config.js";
+import { gradingContext, runRules, staticRules } from "./rules/index.js";
+import { parseProfile } from "./roles.js";
+import { catalogTokens } from "./rules/token.js";
+import { buildReport } from "./score.js";
+import { renderJson, renderTerminal } from "./report.js";
+import { parseHeaders } from "./headers.js";
+import { applyExceptions } from "./exceptions.js";
+// dist/cli.js and src/cli.ts both sit one level below package.json; a release sets the version there.
+const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+const program = new Command();
+program
+    .name("mcpgrade")
+    .description("Lighthouse for MCP servers — lint for agent usability, not just spec compliance")
+    .version(VERSION);
+program
+    .argument("[target]", "server URL (http/https), a local command, or a snapshot .json")
+    .option("--stdio <command>", "spawn a local MCP server over stdio")
+    .option("--snapshot <file>", "lint a saved tools/list JSON snapshot")
+    .option("--header <header>", 'HTTP header for authenticated remote servers, e.g. --header "Authorization: Bearer $TOKEN". Repeatable. Also read from MCPGRADE_HEADERS ("A: 1; B: 2").', (value, previous = []) => [...previous, value])
+    .option("--json", "machine-readable JSON output")
+    .option("--fail-on <severity>", "exit 1 if findings at/above severity exist (error|warn|info)")
+    .option("--disable <rules>", "comma-separated rule IDs to disable")
+    .option("--config <file>", "path to .mcpgraderc.json")
+    .option("--profile <profile>", "auto (default), classic, or code-mode (scores Programmability)")
+    .option("--save-snapshot <file>", "write what was graded (tools, instructions, resources, prompts) as a snapshot file")
+    .option("--probe", "live-probe error quality: call tools with invalid args (stdio targets only)")
+    .option("--eval", "run LLM-powered tool-selection eval (needs ANTHROPIC_API_KEY)")
+    .option("--eval-model <model>", "model for --eval (default: claude-haiku-4-5-20251001)")
+    .option("--eval-base-url <url>", "OpenAI-compatible endpoint (DeepSeek/Qwen/OpenRouter/...); key via MCPLINT_EVAL_API_KEY or OPENAI_API_KEY")
+    .option("--eval-mock", "run eval with the offline mock client (for testing the harness)")
+    .action(async (target, opts) => {
+    try {
+        const config = await loadConfig(opts.config);
+        const snapshot = await takeSnapshot({
+            target,
+            stdio: opts.stdio,
+            snapshot: opts.snapshot,
+            headers: parseHeaders(opts.header),
+        });
+        if (opts.saveSnapshot) {
+            await writeFile(opts.saveSnapshot, snapshotToJson(snapshot), "utf8");
+        }
+        const disabled = [
+            ...(config.disable ?? []),
+            ...(opts.disable?.split(",").map((s) => s.trim()) ?? []),
+        ];
+        const lint = {
+            disabledRules: disabled,
+            tokenBudget: config.tokenBudget,
+            profile: opts.profile !== undefined ? parseProfile(opts.profile) : config.profile,
+            roles: config.roles,
+        };
+        const findings = await runRules(snapshot, lint);
+        const context = gradingContext(snapshot, lint);
+        if (opts.probe) {
+            const stdioCmd = opts.stdio ?? (target && !/^https?:\/\//.test(target) && !target.endsWith(".json") ? target : null);
+            if (!stdioCmd)
+                throw new Error("--probe currently requires a stdio target");
+            const { makeStdioCaller, runProbe } = await import("./probe.js");
+            const caller = await makeStdioCaller(stdioCmd);
+            try {
+                findings.push(...(await runProbe(snapshot, caller)));
+            }
+            finally {
+                await caller.close();
+            }
+        }
+        const excepted = applyExceptions(findings, config.exceptions ?? []);
+        const tokens = await catalogTokens(snapshot);
+        const reach = {
+            catalogTokens: tokens,
+            ...(config.apiOperations !== undefined
+                ? {
+                    apiOperations: config.apiOperations,
+                    operationsPer1kTokens: Math.round((config.apiOperations / Math.max(tokens, 1)) * 1000 * 10) / 10,
+                }
+                : {}),
+        };
+        const report = buildReport(snapshot, excepted.findings, {
+            accepted: excepted.accepted,
+            unusedExceptions: excepted.unused,
+            ...context,
+            reach,
+        });
+        console.log(opts.json ? renderJson(report) : renderTerminal(report));
+        if (opts.eval || opts.evalMock) {
+            const { runEval } = await import("./eval/runner.js");
+            const { renderEval } = await import("./eval/report.js");
+            const { anthropicClient, mockClient, openaiCompatClient } = await import("./eval/client.js");
+            const client = opts.evalMock
+                ? mockClient()
+                : opts.evalBaseUrl
+                    ? openaiCompatClient({
+                        baseUrl: opts.evalBaseUrl,
+                        apiKey: process.env.MCPLINT_EVAL_API_KEY ?? process.env.OPENAI_API_KEY ?? (() => {
+                            throw new Error("--eval-base-url needs MCPLINT_EVAL_API_KEY (or OPENAI_API_KEY)");
+                        })(),
+                        model: opts.evalModel ?? (() => {
+                            throw new Error("--eval-base-url needs --eval-model (e.g. deepseek-chat)");
+                        })(),
+                    })
+                    : anthropicClient({
+                        apiKey: process.env.ANTHROPIC_API_KEY ?? (() => {
+                            throw new Error("--eval needs ANTHROPIC_API_KEY (or use --eval-mock / --eval-base-url)");
+                        })(),
+                        model: opts.evalModel,
+                    });
+            const evalReport = await runEval(snapshot, {
+                client,
+                tasksPerTool: 3,
+                distractors: 2,
+                ambiguous: 2,
+            });
+            console.log(opts.json ? JSON.stringify(evalReport, null, 2) : renderEval(evalReport));
+            if (client.usage && (client.usage.inputTokens || client.usage.outputTokens)) {
+                console.log(`  tokens: ${client.usage.inputTokens} in / ${client.usage.outputTokens} out`);
+            }
+        }
+        if (opts.failOn) {
+            const order = ["info", "warn", "error"];
+            const min = order.indexOf(opts.failOn);
+            if (min === -1)
+                throw new Error(`--fail-on must be one of: ${order.join(", ")}`);
+            const hit = report.findings.some((f) => order.indexOf(f.severity) >= min);
+            process.exit(hit ? 1 : 0);
+        }
+    }
+    catch (err) {
+        console.error(chalk.red(`mcpgrade: ${err instanceof Error ? err.message : err}`));
+        process.exit(2);
+    }
+});
+program
+    .command("serve")
+    .description("run mcpgrade as an MCP server so an agent can grade other servers")
+    .action(async () => {
+    const { serve } = await import("./serve.js");
+    await serve();
+});
+program
+    .command("rules")
+    .description("list all rules")
+    .action(() => {
+    for (const r of staticRules) {
+        console.log(`${r.id}  ${r.severity.padEnd(5)}  ${r.title}`);
+    }
+    console.log("T001  error  Tool catalog total token cost over budget");
+    console.log("T002  warn   Single tool schema token cost over budget");
+    console.log("T003  warn   Repeated boilerplate across descriptions");
+    console.log("T004  info   Too many tools in one server");
+    console.log("T005  info   Many tools and no code or batch tool");
+    console.log("C003  warn   Non-actionable error messages (--probe)");
+    console.log("C004  error  Schema not enforced (--probe)");
+    console.log("P001  error  Code tool never names its language (code-mode)");
+    console.log("P002  warn   Code tool does not say how a result comes back (code-mode)");
+    console.log("P003  warn   Code tool states no limits (code-mode)");
+    console.log("P004  warn   Writing code/batch tool does not say what a failure leaves (code-mode)");
+    console.log("P005  warn   Nothing points at the API a code/batch tool runs against (code-mode)");
+    console.log("P006  warn   Documentation URI that matches no listed resource (code-mode)");
+    console.log("P007  warn   Batch tool does not state its size limit or result references (code-mode)");
+    console.log("P008  info   Writing code/batch tool takes no idempotency key (code-mode)");
+    console.log("P009  info   Code tool has no read-only mode (code-mode)");
+});
+program.parseAsync();

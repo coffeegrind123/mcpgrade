@@ -1,7 +1,7 @@
 {
   "name": "mcpgrade",
-  "version": "0.4.0",
-  "description": "Lighthouse for MCP servers \u2014 lint your MCP server for agent usability, not just spec compliance",
+  "version": "0.5.0-fork.4",
+  "description": "Lighthouse for MCP servers — lint your MCP server for agent usability, not just spec compliance",
   "type": "module",
   "bin": {
     "mcpgrade": "dist/cli.js"
