@@ -1,0 +1,10 @@
+import type { Rule } from "../types.js";
+export declare const S001: Rule;
+export declare const S002: Rule;
+export declare const S003: Rule;
+export declare const S004: Rule;
+export declare const S005: Rule;
+export declare const S006: Rule;
+export declare const S007: Rule;
+export declare const S008: Rule;
+export declare const schemaRules: Rule[];
