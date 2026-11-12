@@ -4,6 +4,25 @@
 
 ![mcpgrade demo — grading a broken server (F/37) and the official memory server (C/78)](https://raw.githubusercontent.com/TengByte/mcpgrade/main/demo.gif)
 
+## This fork
+
+A fork of [tenglidev/mcpgrade](https://github.com/tenglidev/mcpgrade) aimed at code-first MCP
+servers (a few tools, one that runs code, one that batches operations, and a searchable typed
+API) as well as classic ones. So far it adds:
+
+- **Per-tool exceptions** in `.mcpgraderc.json`, each with a reason; accepted findings are listed, not scored.
+- **The whole server is read:** instructions, resources, resource templates and prompts, with paging.
+- **I001 / I002:** missing server instructions, and instructions past what Claude Code keeps.
+- **One defect, one charge:** S008 no longer doubles D004 (upstream issue #9).
+
+Install from a release tag, which carries a built `dist/` (nothing is built on your machine):
+
+```bash
+npx -y github:coffeegrind123/mcpgrade#v<version> <target>
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for details.
+
 ```bash
 npx mcpgrade https://your-server.example.com/mcp   # streamable HTTP
 npx mcpgrade --stdio "node ./my-server.js"          # local stdio server
