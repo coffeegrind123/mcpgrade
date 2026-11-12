@@ -66,7 +66,8 @@ export function checkProgRules(s: ServerSnapshot, roles: Roles): Finding[] {
       out.push(finding("P003", "warn", t, `"${t.name}" states no limits (time, memory, output size).`,
         "State the limits and what happens at them, or expose them as parameters (e.g. timeout_ms)."));
     }
-    if (!paramNames(t).some((n) => READ_ONLY_PARAM.test(n)) && !code.some((o) => o !== t && !writes(o))) {
+    const offersReadOnly = !writes(t) || paramNames(t).some((n) => READ_ONLY_PARAM.test(n)) || code.some((o) => o !== t && !writes(o));
+    if (!offersReadOnly) {
       out.push(finding("P009", "info", t, `"${t.name}" has no read-only mode, so even a pure read needs write access.`,
         "Offer read_only (or a dry run) that refuses writes, or a separate read-only code tool."));
     }

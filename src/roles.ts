@@ -40,8 +40,9 @@ function hasType(p: JsonSchema, type: string): boolean {
   return p.type === type || (Array.isArray(p.type) && p.type.includes(type));
 }
 
+/** A program is free text: a string with a fixed set of values (an enum) is a mode switch. */
 function isCode(t: ToolDef): boolean {
-  return params(t).some(([name, p]) => CODE_PARAM.test(name) && hasType(p, "string"));
+  return params(t).some(([name, p]) => CODE_PARAM.test(name) && hasType(p, "string") && !p.enum);
 }
 
 function isBatch(t: ToolDef): boolean {
